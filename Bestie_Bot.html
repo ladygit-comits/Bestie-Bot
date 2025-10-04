@@ -48,7 +48,7 @@ function addMessage(text, sender='bot') {
 
 // --- Call Gemini API for hints ---
 async function getAIHint(guess) {
-    const apiKey = "AIzaSyDCRGLzyfxPCOhqmUpgUyFhswEPRtfuJ08";
+    const apiKey = "YOUR_API_KEY_HERE";
     const API_MODEL = "gemini-2.5-flash";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${API_MODEL}:generateContent?key=${apiKey}`;
 
