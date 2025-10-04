@@ -32,10 +32,11 @@ Bestie_Bot is an interactive, AI-enhanced number guessing game built with **HTML
 
 ---
 
-## License
+## Important Note
 
-This project is open-source and free to use.
+The project includes optional AI hints that use the Gemini API. For security reasons, the actual API key has **not** been included in this repository.  
 
----
+In `Bestie_Bot.html` at line 51, you will see a placeholder:
 
-Have fun guessing! 🎉
+```javascript
+const apiKey = "YOUR_API_KEY_HERE";
