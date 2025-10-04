@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bestie Guess Game</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    .chat-bubble { max-width: 80%; padding: 10px 15px; border-radius: 20px; margin-bottom: 10px; word-wrap: break-word; }
+    .user-bubble { background-color: #7C3AED; color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
+    .bot-bubble { background-color: #374151; color: white; align-self: flex-start; border-bottom-left-radius: 5px; }
+</style>
+</head>
+<body class="bg-gray-900 flex flex-col items-center p-4 min-h-screen font-sans">
+
+<div class="w-full max-w-xl flex flex-col h-[90vh] bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border-4 border-violet-500">
+    <div class="p-4 bg-violet-600 text-white flex items-center">
+        <h1 class="text-xl font-bold">Bestie Guess Game</h1>
+    </div>
+
+    <div id="chat-area" class="flex-grow p-4 space-y-3 overflow-y-auto flex flex-col">
+        <div class="bot-bubble self-start">Hi! I'm your Bestie Bot. Guess a number between 1 and 10!</div>
+    </div>
+
+    <div class="p-4 bg-gray-700 flex items-center border-t border-gray-600">
+        <input type="number" id="user-input" placeholder="Enter your guess..." class="flex-grow p-3 rounded-xl bg-gray-600 text-white border-none focus:outline-none focus:ring-2 focus:ring-violet-500" onkeydown="if(event.key==='Enter') makeGuess()">
+        <button onclick="makeGuess()" class="ml-3 bg-violet-500 hover:bg-violet-600 text-white p-3 rounded-xl">Guess</button>
+    </div>
+</div>
+
+<script>
+const chatArea = document.getElementById('chat-area');
+const userInput = document.getElementById('user-input');
+
+// --- Jac-style Walker Game State ---
+const game = {
+    correctNumber: Math.floor(Math.random() * 10) + 1, // Node: turn
+    active: true
+};
+
+function addMessage(text, sender='bot') {
+    const msg = document.createElement('div');
+    msg.classList.add('chat-bubble', sender==='user' ? 'user-bubble' : 'bot-bubble', sender==='user' ? 'self-end' : 'self-start');
+    msg.innerHTML = text;
+    chatArea.appendChild(msg);
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+// --- Call Gemini API for hints ---
+async function getAIHint(guess) {
+    const apiKey = "AIzaSyDCRGLzyfxPCOhqmUpgUyFhswEPRtfuJ08";
+    const API_MODEL = "gemini-2.5-flash";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${API_MODEL}:generateContent?key=${apiKey}`;
+
+    const systemPrompt = `You are Bestie Bot. Give a fun, witty hint about a number between 1-10. User guessed ${guess}. Do not reveal the number.`;
+
+    const payload = {
+        contents: [{ parts: [{ text: systemPrompt }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] }
+    };
+
+    try {
+        const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text || "Hmm... I have no clue!";
+    } catch (e) {
+        console.error(e);
+        return "AI hint failed 😢, try guessing again!";
+    }
+}
+
+// --- Jac-style Walker Action ---
+async function makeGuess() {
+    if (!game.active) return;
+    const guess = parseInt(userInput.value);
+    if (!guess || guess < 1 || guess > 10) return addMessage("Please guess a number between 1 and 10!", 'bot');
+
+    addMessage(guess, 'user');
+    userInput.value = '';
+
+    if (guess === game.correctNumber) {
+        addMessage(`🎉 You got it! The number was ${game.correctNumber}. Game over!`, 'bot');
+        game.active = false;
+    } else {
+        // Walker visits turn node → call AI hint
+        const hint = await getAIHint(guess);
+        addMessage(hint, 'bot');
+    }
+}
+</script>
+</body>
+</html>
